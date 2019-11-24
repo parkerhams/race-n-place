@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using Rewired;
 
 public class KartController : MonoBehaviour
 {
@@ -29,6 +30,11 @@ public class KartController : MonoBehaviour
     [SerializeField]
     public LayerMask layerMask;
 
+    //Rewired player input ID
+    public int playerId = 1;
+    //Rewired player 
+    public Player player;
+
     #endregion
 
 
@@ -51,15 +57,15 @@ public class KartController : MonoBehaviour
 
     private void Start()
     {
-
+        player = ReInput.players.GetPlayer(playerId);
     } 
 
     private void Update()
     {
-        //Follow Collider
+        //Follow Cthe sphere collider that is rolling
         transform.position = sphereRigidbody.transform.position - new Vector3(0, 0.4f, 0);
 
-        //Accelerate
+        //Acceler
         if (Input.GetButton("Fire1"))
             speed = acceleration;
 
@@ -80,7 +86,7 @@ public class KartController : MonoBehaviour
 
     private void Steer(int steerDirection, float handling)
     {
-
+        rotation = (steerHandling * steerDirection) * handling;
     }
 
     private void Drift()
