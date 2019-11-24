@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class KartController : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class KartController : MonoBehaviour
 
     */
 
-    #region PUBLIC_VARIABLES
+    #region PUBLIC_DRIVING_VARIABLES
 
     [SerializeField]
     public bool isDrifting;
@@ -31,7 +32,7 @@ public class KartController : MonoBehaviour
     #endregion
 
 
-    #region PRIVATE_VARIABLES    
+    #region PRIVATE_HANDLING_VARIABLES    
 
     [SerializeField]
     private Transform kartModel;
@@ -55,6 +56,20 @@ public class KartController : MonoBehaviour
 
     private void Update()
     {
+        //Follow Collider
+        transform.position = sphereRigidbody.transform.position - new Vector3(0, 0.4f, 0);
+
+        //Accelerate
+        if (Input.GetButton("Fire1"))
+            speed = acceleration;
+
+        //Steer
+        if (Input.GetAxis("Horizontal") != 0)
+        {
+            int dir = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
+            float amount = Mathf.Abs((Input.GetAxis("Horizontal")));
+            Steer(dir, amount);
+        }
 
     }
 
@@ -63,7 +78,7 @@ public class KartController : MonoBehaviour
 
     }
 
-    private void Steer()
+    private void Steer(int steerDirection, float handling)
     {
 
     }
