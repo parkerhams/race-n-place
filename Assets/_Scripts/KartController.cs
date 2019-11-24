@@ -5,10 +5,12 @@ using UnityEngine;
 public class KartController : MonoBehaviour
 {
     /*
+
     This controller uses a sphere method - 
     The movement comes from rotating a sphere collider to get more simplified motion
     In rotating the sphere collider, we get car physics to speed up, slow down, etc.
     (We can change this too if we want!! There could be better methods)
+
     */
 
     #region PUBLIC_VARIABLES
@@ -37,8 +39,9 @@ public class KartController : MonoBehaviour
     [SerializeField]
     private Rigidbody sphereRigidbody;
 
+    [Header("Drifting")]
     private float speed, currentSpeed;
-    private float rotate, currentRotate;
+    private float rotation, currentRotation;
     private int driftDirection;
     private float driftPower;
     private int driftMode = 0;
