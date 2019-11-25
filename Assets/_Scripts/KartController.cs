@@ -24,7 +24,7 @@ public class KartController : MonoBehaviour
     [SerializeField]
     public float acceleration = 30f;
     [SerializeField]
-    public float steerHandling = 80f;
+    public float steerHandling = 80f; //how much/little can the player control their steering (I believe kart racers call this handling)
     [SerializeField]
     public float kartGravity = 10f;
     [SerializeField]
@@ -55,21 +55,26 @@ public class KartController : MonoBehaviour
 
     #endregion
 
-    private void Start()
+    private void Awake()
     {
         player = ReInput.players.GetPlayer(playerId);
     } 
 
+    private void Start()
+    {
+
+    }
+
     private void Update()
     {
-        //Follow Cthe sphere collider that is rolling
+        //Follow the sphere collider that is rolling
         transform.position = sphereRigidbody.transform.position - new Vector3(0, 0.4f, 0);
 
-        //Acceler
+        //Accelerate
         if (Input.GetButton("Fire1"))
             speed = acceleration;
 
-        //Steer
+        //Steer a direction by an amount based on the input axis
         if (Input.GetAxis("Horizontal") != 0)
         {
             int dir = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
@@ -84,17 +89,13 @@ public class KartController : MonoBehaviour
 
     }
 
+    //using the steerHandling variable in the private region, tell the kart which direction to rotate in by a factor of handling
     private void Steer(int steerDirection, float handling)
     {
         rotation = (steerHandling * steerDirection) * handling;
     }
 
     private void Drift()
-    {
-
-    }
-
-    private void Boost()
     {
 
     }
