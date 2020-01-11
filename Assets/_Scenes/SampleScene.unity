@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.574817, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -149,14 +149,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81bb1f3854f9d44f83b771cb319c143, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isDrifting: 0
   acceleration: 65
   steerHandling: 20
   kartGravity: 30
   layerMask:
     serializedVersion: 2
     m_Bits: 307
+  isDrifting: 0
+  playerId: 1
   kartModel: {fileID: 1332129863}
+  kartNormal: {fileID: 1332129863}
   sphereRigidbody: {fileID: 1058047729}
 --- !u!4 &182079944
 Transform:
