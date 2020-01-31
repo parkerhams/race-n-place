@@ -7,6 +7,11 @@
 # Racing Mode
 - One lap around the track should take around 30-60 seconds.
 - Two laps per round
+- Scrap appears on the map before the race even starts, at predetermined locations.
+- The amount of scrap that appears is 2x(number of players).
+- Scrap can't be destroyed, only knocked off of other players.
+- Once you cross the finish line the 2nd time, the race is over for you and your scrap is safe (your vehicle could still explode, but no negative consequences for it).
+- Overall game victory: based on scoring system? How much value for 1st/2nd/3rd/4th place, how much value for blowing up other players?
 
 # Placing mode
 - On average, a player will collect enough scrap to place 2 objects (towers/traps).
@@ -25,4 +30,4 @@
 
 
 #Vehicle damage
-Vehicles can get destroyed if they take enough damage. The player will not respawn for that round. Rounds are short enough that players shouldn't mind having to 'sit out' for a very short period of time if they get blown up.
+Vehicles can get destroyed if they take enough damage. The player will not respawn for that round. Rounds are short enough that players shouldn't mind having to 'sit out' for a very short period of time if they get blown up. If explosions happen more often, we may add in respawning. Will need testing to decide.
