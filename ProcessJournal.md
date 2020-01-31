@@ -29,5 +29,5 @@
 - Effects of getting hit by a tower or trap: getting knocked around, spinning out, speed decrease, dropping scrap, vehicle damage that eventually blows up your car
 
 
-#Vehicle damage
+# Vehicle damage
 Vehicles can get destroyed if they take enough damage. The player will not respawn for that round. Rounds are short enough that players shouldn't mind having to 'sit out' for a very short period of time if they get blown up. If explosions happen more often, we may add in respawning. Will need testing to decide.
