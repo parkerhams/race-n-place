@@ -190,7 +190,7 @@ MonoBehaviour:
       _startPlaying: 1
       _defaultJoystickMaps:
       - _enabled: 1
-        _categoryId: 0
+        _categoryId: 2
         _layoutId: 0
       _defaultMouseMaps: []
       _defaultKeyboardMaps:
@@ -306,7 +306,7 @@ MonoBehaviour:
     - _id: 6
       _name: MoveHorizontal
       _type: 0
-      _descriptiveName: Move through grid selection
+      _descriptiveName: Move cursor horizontally
       _positiveDescriptiveName: 
       _negativeDescriptiveName: 
       _behaviorId: 0
@@ -315,7 +315,7 @@ MonoBehaviour:
     - _id: 7
       _name: MoveVertical
       _type: 0
-      _descriptiveName: Move through grid selection
+      _descriptiveName: Move cursor vertically
       _positiveDescriptiveName: 
       _negativeDescriptiveName: 
       _behaviorId: 0
@@ -324,7 +324,7 @@ MonoBehaviour:
     - _id: 8
       _name: Select
       _type: 1
-      _descriptiveName: Select or confirm; place tower
+      _descriptiveName: Select or confirm; place trap
       _positiveDescriptiveName: 
       _negativeDescriptiveName: 
       _behaviorId: 0
@@ -998,7 +998,7 @@ MonoBehaviour:
         _modifierKey2: 0
         _modifierKey3: 0
       - _actionCategoryId: 0
-        _actionId: -1
+        _actionId: 8
         _elementType: 1
         _elementIdentifierId: 4
         _axisRange: 0
@@ -1009,7 +1009,7 @@ MonoBehaviour:
         _modifierKey2: 0
         _modifierKey3: 0
       - _actionCategoryId: 0
-        _actionId: -1
+        _actionId: 9
         _elementType: 1
         _elementIdentifierId: 5
         _axisRange: 0
@@ -1213,7 +1213,18 @@ MonoBehaviour:
       name: 
       hardwareGuidString: 
       customControllerUid: 0
-      actionElementMaps: []
+      actionElementMaps:
+      - _actionCategoryId: 0
+        _actionId: 6
+        _elementType: 1
+        _elementIdentifierId: -1
+        _axisRange: 0
+        _invert: 0
+        _axisContribution: 0
+        _keyboardKeyCode: 100
+        _modifierKey1: 0
+        _modifierKey2: 0
+        _modifierKey3: 0
     - id: 1
       categoryId: 1
       layoutId: 0
@@ -1273,7 +1284,7 @@ MonoBehaviour:
       customControllerUid: 0
       actionElementMaps:
       - _actionCategoryId: 0
-        _actionId: 6
+        _actionId: 7
         _elementType: 1
         _elementIdentifierId: -1
         _axisRange: 0
