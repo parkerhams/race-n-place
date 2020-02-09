@@ -5,20 +5,30 @@ using Rewired;
 
 public class Cursor : MonoBehaviour
 {
-    private Player player;
-    public int playerId = 0;
+	public int playerId = 0;
+	
+	public bool towerMode = false;//
+	
+	[HideInInspector]
+	public Player player;
 
-    Rigidbody rb;
-    float moveSpeed = 1200f;
-    Vector3 moveVector;
-    CharacterController cc;
+	private GameObject center;
+	private Rigidbody rb;
+    
+    private float moveSpeed = 1200f;
+	private Vector3 moveVector;
+    
+    private Vector3 startPosition;
 
-    GameObject currentlyHoveredItem;//the shop item the player is currently hovering over
-    GameObject currentlyHeldItem;//the item the player has already paid for and can place somewhere
+	private int scrap = 0;
+    
+	private int layerMask_adjustHeightLayer = 1<< 12;//bit shift index of ground layer (12), get bit mask
 
-    bool canPlaceItem = false;// set to true when the player's cursor is over a valid location for the trap/tower to be placed
+	private GameObject currentlyHoveredItem;//when the player hovers their cursor over a shop item; this is the actual item that the shop item has a reference to
+    private GameObject currentlyHeldItem;//the item the player has already paid for and can place somewhere
 
-    public bool towerMode = false;//
+	// set to true when the player's cursor is over a valid location for the trap/tower to be placed
+	private bool canPlaceItem = false;
 
     private void Awake()
     {
@@ -26,12 +36,47 @@ public class Cursor : MonoBehaviour
         //cc = GetComponent<CharacterController>();
         // Get the Rewired Player object for this player and keep it for the duration of the character's lifetime
         player = ReInput.players.GetPlayer(playerId);
+        startPosition = transform.position;
     }
 
-    void Start()
-    {
-        Debug.Log(player + " " +  playerId);
-    }
+	private void Start()
+	{
+		center = this.transform.Find("center").gameObject;
+        Debug.Log(player + " " +  playerId + " start position is " + startPosition);
+	}
+	
+	private void Update()
+	{
+		MoveCursor();
+		
+		if (player.GetButtonDown("Select"))
+		{
+			SelectPressed();
+		}
+		if(player.GetButtonDown("DebugSwapMode"))
+		{
+			GameManager.Instance.SwapMode();
+		}
+	}
+    
+	private void AdjustCursorHeight()
+	{
+		//raycast hit downwards, tell the cursor to change its Y height to match what the raycast just hit
+		RaycastHit hit;
+		//does the ray intersect with the ground layer?
+		if(Physics.Raycast(this.transform.position, transform.TransformDirection(Vector3.down), 
+			out hit, Mathf.Infinity, layerMask_adjustHeightLayer))
+		{
+			//draw a line from wherever the cursor height is that is the distance between the cursor and the height of what it just hit 
+			Debug.DrawRay(this.transform.position, 
+				this.transform.TransformDirection(Vector3.down) * hit.distance, Color.yellow);
+			
+			float heightDifference =  this.transform.position.y - (.5f*hit.distance);
+			
+			//this.transform.position = new Vector3(this.transform.position.x, heightDifference, 
+			//this.transform.position.z);
+		}
+	}
 
     private void OnTriggerEnter(Collider other)
     {
@@ -50,7 +95,7 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    void BuyItem()
+	private void BuyItem()
     {
         //check scrap cost
         if(currentlyHeldItem)
@@ -70,7 +115,7 @@ public class Cursor : MonoBehaviour
         {
             GameObject o = Instantiate(currentlyHoveredItem, transform.position, Quaternion.identity);
             currentlyHeldItem = o;
-            currentlyHeldItem.transform.parent = gameObject.transform;
+	        currentlyHeldItem.transform.SetParent(this.gameObject.transform);
         }
         else
         {
@@ -78,9 +123,9 @@ public class Cursor : MonoBehaviour
         }
     }
 
-    void MoveCursor()
+	private void MoveCursor()
     {
-        if (!towerMode)
+	    if (GameManager.Instance.mode != GameManager.Mode.Place)
         {
             return;
         }
@@ -95,9 +140,11 @@ public class Cursor : MonoBehaviour
         {
             rb.velocity = new Vector3(0, 0, 0);
         }
+        
+	    AdjustCursorHeight();
     }
 
-    void SelectPressed()
+	private void SelectPressed()
     {
         Debug.Log("select");
         if (currentlyHoveredItem)
@@ -108,18 +155,44 @@ public class Cursor : MonoBehaviour
         {
             //try to place item
             //check if there's anything in the way when activating collider
-            currentlyHeldItem.GetComponent<BoxCollider>().enabled = true;
+	        currentlyHeldItem.GetComponent<BoxCollider>().enabled = true;
+	        if(currentlyHeldItem.GetComponent<SpikeTrap>())
+	        {
+	        	currentlyHeldItem.GetComponent<SpikeTrap>().isPlaced = true;
+	        }
             currentlyHeldItem.transform.parent = null;
-            currentlyHeldItem = null;
+	        currentlyHeldItem = null;
         }
     }
 
-    void Update()
+	/// <summary>
+    /// When switching to or from place mode, hide or show the cursors
+    /// </summary>
+    public void ToggleActive(bool enable)
     {
-        MoveCursor();
-        if (player.GetButtonDown("Select"))
+        if(!enable)//turn off cursors and go into race mode
         {
-            SelectPressed();
+            if(currentlyHeldItem)
+            {
+	            if(!currentlyHeldItem.GetComponent<Item>()) 
+	            { 
+	            	Debug.LogWarning("Item has no Item component!"); 
+	            	return; 
+	            }
+                scrap += currentlyHeldItem.GetComponent<Item>().scrapCost;
+            }
+            
+            Destroy(currentlyHeldItem);
+            currentlyHeldItem = null;
+            currentlyHoveredItem = null;
+            transform.position = startPosition;
+            gameObject.SetActive(false);
+        }
+        
+        else//turn on cursors
+        {
+            gameObject.SetActive(true);
+            transform.position = startPosition;
         }
     }
 }
