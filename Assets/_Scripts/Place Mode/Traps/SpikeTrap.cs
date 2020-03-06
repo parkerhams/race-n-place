@@ -2,109 +2,73 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpikeTrap : MonoBehaviour
+public class SpikeTrap : AbstractTrapBehavior
 {
-	public bool isPlaced = false;
-	bool readyToTrigger = true;
-	public float cooldownTime = 2f;//how long before the trap can trigger again
-	public bool hurtsFriendly = false;//whether or not the trap can hurt friendly targets (owner)
-	public bool triggersFromFriendly = false;//whether or not the trap can be triggered by friendly targets
-	public bool continuouslyTriggers = false;//traps that keep trying to trigger as long as a player is inside
+	public GameObject[] shrapnel;//shrapnel are originally child objects of the trap, but are unparented when the trap explodes.
+	//need to have a reference to all the shrapnel to remove them when the trap is removed/restored
 	
-	List<GameObject> playersInTrapTriggerRadius = new List<GameObject>();//if traps continuously trigger, they need to know if there are players inside the trigger radius
+	public float explosionRadius = 3f;
+	public float explosionKnockback = 5f;
 	
-	GameObject owner;//the person who placed the trap
-	int ownerPlayerId;
+	public GameObject explodedCactus;
+	public GameObject unexplodedCactus;
 	
-	
-    // Start is called before the first frame update
-    void Start()
-    {
-	    if(owner = null)
-	    {
-	    	owner = GameManager.Instance.gameObject;
-	    }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-	    if(playersInTrapTriggerRadius != null && continuouslyTriggers)
-	    {
-	    	foreach(GameObject p in playersInTrapTriggerRadius)
-	    	{
-	    		TriggerTrap(p);
-	    	}
-	    }
-    }
-    
-	// OnTriggerEnter is called when the Collider other enters the trigger.
-	protected void OnTriggerEnter(Collider other)
+	protected override void Start()
 	{
-		if(other.tag == "Player")
-		{
-			TriggerTrap(other.gameObject);
-			playersInTrapTriggerRadius.Add(other.gameObject);
-		}
-	}
-	
-	// OnTriggerExit is called when the Collider other has stopped touching the trigger.
-	protected void OnTriggerExit(Collider other)
-	{
-		if(other.tag == "Player")
-		{
-			playersInTrapTriggerRadius.Remove(other.gameObject);
-		}
-	}
-	
-	void TriggerTrap(GameObject thePlayer)
-	{
-		Debug.Log("Trap attempting to trigger");
-		if(GameManager.Instance.mode == GameManager.Mode.Place)
-		{
-			//can't trigger traps during place mode?
-			return;
-		}
-		Debug.Log("a");
-		if(!isPlaced)
-		{
-			return;
-		}
-		Debug.Log("b");
-		if(!readyToTrigger)
-		{
-			return;
-		}
-		Debug.Log("c");
-		if(thePlayer == owner && !triggersFromFriendly)//TODO: change to check ownerPlayerId against the player's id in their kart script once it's added
-		{
-			return;
-		}
+		//run Start() in the AbstractTrapBehavior first
+		base.Start();
+		hurtsFriendly = false;
+		triggersFromFriendly = false;
+		explodedCactus.SetActive(false);
+		damageRadius = new Vector3(5f, 5f, 5f);//adjust this - temporary arbitrary value
 		
-		//trigger the trap
-		readyToTrigger = false;
-		Debug.Log("Trap triggered!");
-		TemporaryTrapTriggerEffect();
-		StartCoroutine(TrapResetCooldownCoroutine());
+		base.OnTriggerTrap += OnTriggerTrap;
+		base.OnRestoreTrap += OnRestoreTrap;
+	}
+	
+	private void OnTriggerTrap(GameObject trap)
+	{
+		//specific trap behaviors for spike trap go here - 
+		//first, run the base TriggerTrap() function that all traps have, and run this
+		trap = this.gameObject;
+		Explode();
+	}
+	
+	private void OnRestoreTrap(GameObject trap)
+	{
+		trap = this.gameObject;
+		unexplodedCactus.SetActive(true);
+		explodedCactus.SetActive(false);
+		//restore shrapnel
+		foreach(GameObject s in shrapnel)
+		{
+			Shrapnel shrapnelScript = s.GetComponent<Shrapnel>();
+			shrapnelScript.ToggleActive(true);
+			s.transform.position = shrapnelScript.startingPos;
+			s.transform.rotation = shrapnelScript.startingRot;
+			s.GetComponent<Rigidbody>().isKinematic = true;
+			s.GetComponent<AbstractTrapBehavior>().isPlaced = false;
+			s.transform.parent = this.transform;
+		}
+	}
+	
+	void Explode()
+	{
+		explodedCactus.SetActive(true);
+		Debug.Log(explodedCactus);
+		unexplodedCactus.SetActive(false);
 		
+		List<Buggy> buggies = buggiesInRadius(transform.position, explosionRadius);
+		//deal damage to nearby buggies
+		foreach(Buggy b in buggies)
+		{
+			b.TakeDamage(damage, owner);
+			Debug.Log("hit by explosion" + damage);
+			b.TakeKnockback(explosionKnockback, this.gameObject);
+		}
+		foreach(GameObject s in shrapnel)
+		{
+			s.GetComponent<Shrapnel>().LaunchOffTrap();
+		}
 	}
-	
-	void TemporaryTrapTriggerEffect()
-	{
-		transform.localScale += new Vector3(0,4,0);
-		StartCoroutine(TemporaryCoroutine());
-	}
-	
-	IEnumerator TemporaryCoroutine()
-	{
-		yield return new WaitForSeconds(cooldownTime);
-		transform.localScale -= new Vector3(0,4,0);
-	}
-	
-	IEnumerator TrapResetCooldownCoroutine()
-	{
-		yield return new WaitForSeconds(cooldownTime);
-		readyToTrigger = true;
-	}
-	
 }

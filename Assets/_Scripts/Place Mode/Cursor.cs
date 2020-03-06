@@ -5,6 +5,10 @@ using Rewired;
 
 public class Cursor : MonoBehaviour
 {
+	//for the shader!
+	[SerializeField]
+	private float radius;
+	
 	public int playerId = 0;
 	
 	public bool towerMode = false;//
@@ -15,17 +19,22 @@ public class Cursor : MonoBehaviour
 	private GameObject center;
 	private Rigidbody rb;
     
-    private float moveSpeed = 1200f;
+	private float moveSpeed = 12f;
 	private Vector3 moveVector;
     
-    private Vector3 startPosition;
+	private Vector3 startPosition;
+    
+	PlayerControls pControls;
 
-	private int scrap = 0;
+	//private int scrap = 0;
     
 	private int layerMask_adjustHeightLayer = 1<< 12;//bit shift index of ground layer (12), get bit mask
 
 	private GameObject currentlyHoveredItem;//when the player hovers their cursor over a shop item; this is the actual item that the shop item has a reference to
-    private GameObject currentlyHeldItem;//the item the player has already paid for and can place somewhere
+	private GameObject currentlyHeldItem;//the item the player has already paid for and can place somewhere
+    
+	private ShopItem hoveredShopScript;
+	private ShopItem heldShopScript;
 
 	// set to true when the player's cursor is over a valid location for the trap/tower to be placed
 	private bool canPlaceItem = false;
@@ -41,8 +50,13 @@ public class Cursor : MonoBehaviour
 
 	private void Start()
 	{
-		center = this.transform.Find("center").gameObject;
-        Debug.Log(player + " " +  playerId + " start position is " + startPosition);
+		foreach(GameObject p in GameManager.Instance.genericPlayers)
+		{
+			if(p.GetComponent<PlayerControls>().playerId == playerId)
+			{
+				pControls = p.GetComponent<PlayerControls>();
+			}
+		}
 	}
 	
 	private void Update()
@@ -57,6 +71,10 @@ public class Cursor : MonoBehaviour
 		{
 			GameManager.Instance.SwapMode();
 		}
+		
+		Shader.SetGlobalVector("_Position", transform.position);
+		Shader.SetGlobalFloat("_Radius", radius);
+
 	}
     
 	private void AdjustCursorHeight()
@@ -83,7 +101,8 @@ public class Cursor : MonoBehaviour
         if(other.tag == "ShopItem")
         {
             //make this item the "currently hovered" item
-            currentlyHoveredItem = other.gameObject.GetComponent<ShopItem>().item;
+	        currentlyHoveredItem = other.gameObject.GetComponent<ShopItem>().item;
+	        hoveredShopScript = other.gameObject.GetComponent<ShopItem>();
         }
     }
 
@@ -91,13 +110,13 @@ public class Cursor : MonoBehaviour
     {
         if(other.tag == "ShopItem")
         {
-            currentlyHoveredItem = null;
+	        currentlyHoveredItem = null;
+	        hoveredShopScript = null;
         }
     }
 
 	private void BuyItem()
     {
-        //check scrap cost
         if(currentlyHeldItem)
         {
             if(currentlyHeldItem == currentlyHoveredItem)
@@ -111,8 +130,34 @@ public class Cursor : MonoBehaviour
             //or let the player trade their old item + cost difference for the new item?
             return;
         }
-        if (currentlyHoveredItem)
+	    if (currentlyHoveredItem)//if they're actually hovering something to buy...
         {
+        	//check quantity of shop item
+	        if(hoveredShopScript)
+	        {
+		        if(!hoveredShopScript.canBePurchased)
+		        {
+			        //the player tried to buy something that someone has already bought out
+			        Debug.Log("A player tried to buy an already bought out item. Make sure items are inaccessible once quantity hits 0.");
+			        return;
+	    		
+		        }
+	        }
+	        
+	        
+	        //check scrap cost
+	        Item itemScript = currentlyHoveredItem.GetComponent<Item>();
+	        if(pControls.bankedScrap < itemScript.scrapCost)
+	        {
+	        	return;//can't afford
+	        }
+	        
+		    //buy the item
+		    heldShopScript = hoveredShopScript.GetComponent<ShopItem>();
+		    pControls.ChangeBankedScrap(-itemScript.scrapCost);
+		    heldShopScript.ChangeQuantity(-1);
+	        //TODO EVENT: update jumbotron scrap display
+	        //SFX bought item
             GameObject o = Instantiate(currentlyHoveredItem, transform.position, Quaternion.identity);
             currentlyHeldItem = o;
 	        currentlyHeldItem.transform.SetParent(this.gameObject.transform);
@@ -134,7 +179,8 @@ public class Cursor : MonoBehaviour
 
         if (moveVector.x != 0.0f || moveVector.y != 0.0f)
         {
-            rb.velocity = new Vector3(1 * player.GetAxis("MoveHorizontal") * Time.deltaTime * moveSpeed, 0, 1 * player.GetAxis("MoveVertical") * Time.deltaTime * moveSpeed);
+	        //rb.velocity = new Vector3(1 * player.GetAxis("MoveHorizontal") * Time.deltaTime * moveSpeed, 0, 1 * player.GetAxis("MoveVertical") * Time.deltaTime * moveSpeed);
+	        transform.Translate(1 * player.GetAxis("MoveHorizontal") * Time.deltaTime * moveSpeed, 0, 1 * player.GetAxis("MoveVertical") * Time.deltaTime * moveSpeed);
         }
         else
         {
@@ -146,24 +192,35 @@ public class Cursor : MonoBehaviour
 
 	private void SelectPressed()
     {
-        Debug.Log("select");
         if (currentlyHoveredItem)
         {
             BuyItem();
         }
         else if (currentlyHeldItem)
         {
-            //try to place item
-            //check if there's anything in the way when activating collider
-	        currentlyHeldItem.GetComponent<BoxCollider>().enabled = true;
-	        if(currentlyHeldItem.GetComponent<SpikeTrap>())
-	        {
-	        	currentlyHeldItem.GetComponent<SpikeTrap>().isPlaced = true;
-	        }
-            currentlyHeldItem.transform.parent = null;
-	        currentlyHeldItem = null;
+	        PlaceTrap();
         }
     }
+    
+	private void PlaceTrap()
+	{
+		//try to place item
+		//check if there's anything in the way when activating collider
+		currentlyHeldItem.GetComponent<BoxCollider>().enabled = true;
+		if(currentlyHeldItem.GetComponent<AbstractTrapBehavior>())
+		{
+			AbstractTrapBehavior ATBScript = currentlyHeldItem.GetComponent<AbstractTrapBehavior>();
+			ATBScript.isPlaced = true;
+			ATBScript.placedPosition = currentlyHeldItem.transform.position;
+			ATBScript.TriggerTrap(this.gameObject);
+			ATBScript.owner = pControls.gameObject;
+		}
+		if(!currentlyHeldItem) {Debug.Log("Tried to place trap with no held item.");}
+		GameManager.Instance.placedTraps.Add(currentlyHeldItem);
+		currentlyHeldItem.transform.parent = null;
+		currentlyHeldItem = null;
+		heldShopScript = null;
+	}
 
 	/// <summary>
     /// When switching to or from place mode, hide or show the cursors
@@ -179,20 +236,31 @@ public class Cursor : MonoBehaviour
 	            	Debug.LogWarning("Item has no Item component!"); 
 	            	return; 
 	            }
-                scrap += currentlyHeldItem.GetComponent<Item>().scrapCost;
+	            //refund the player for the item they didn't place before the mode ended
+	            pControls.ChangeBankedScrap(currentlyHeldItem.GetComponent<Item>().scrapCost);
+	            heldShopScript.ChangeQuantity(1);
             }
             
             Destroy(currentlyHeldItem);
             currentlyHeldItem = null;
-            currentlyHoveredItem = null;
+	        currentlyHoveredItem = null;
+	        heldShopScript = null;
+	        hoveredShopScript = null;
             transform.position = startPosition;
             gameObject.SetActive(false);
         }
         
         else//turn on cursors
         {
-            gameObject.SetActive(true);
-            transform.position = startPosition;
+	        foreach(GameObject a in GameManager.Instance.allActivePlayers)
+	        {
+	        	PlayerControls playerControlsScript = a.GetComponent<PlayerControls>();
+	        	if(playerControlsScript.isPlaying && playerControlsScript.playerId == playerId)
+	        	{
+	        		gameObject.SetActive(true);
+		        	transform.position = startPosition;
+	        	}
+	        }
         }
     }
 }

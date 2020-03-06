@@ -17,55 +17,60 @@ public class RaceCheckpoints : MonoBehaviour
 	{
 		if(other.gameObject.tag == "Player")
 		{
-			Buggy buggyScript = other.gameObject.GetComponent<Buggy>();
+			PlayerControls playerControlsScript = other.gameObject.GetComponentInParent<Buggy>().playerControlsScript;
 			if(checkpointNumber == 0)//if this is the finish line
 			{
-				if(HitMostCheckpoints(buggyScript, 1))
+				if(HitMostCheckpoints(playerControlsScript, 1))
 				{
-					GameManager.Instance.LapComplete(buggyScript);
+					GameManager.Instance.LapComplete(playerControlsScript);
+				}
+				else
+				{
+					//
+
 				}
 			}
 			else //regular checkpoint
 			{
-				HitCheckpoint(buggyScript);
+				HitCheckpoint(playerControlsScript);
 			}
 			
 		}
 	}
 	
-	void HitCheckpoint(Buggy buggyScript)//add this checkpoint to the buggy's list of checkpoints hit
+	void HitCheckpoint(PlayerControls playerControlsScript)//add this checkpoint to the buggy's list of checkpoints hit
 	{
-		if(!buggyScript.checkpointsHit.Contains(this.gameObject))
+		if(!playerControlsScript.checkpointsHit.Contains(this.gameObject))
 		{
-			buggyScript.checkpointsHit.Add(this.gameObject);
-			Debug.Log("Player " + buggyScript.playerId + " hit checkpoint " + checkpointNumber);
+			playerControlsScript.checkpointsHit.Add(this.gameObject);
+			Debug.Log("Player " + playerControlsScript.playerId + " hit checkpoint " + checkpointNumber);
 		}
 		else
 		{
 			//player is going backwards - give them some kind of "Wrong way!" text overhead?
-			Debug.Log("Player " + buggyScript.playerId + " is going the wrong way!");
+			Debug.Log("Player " + playerControlsScript.playerId + " is going the wrong way!");
 		}
 	}
 	
-	void LapComplete(Buggy buggyScript)//this buggy completed a lap
+	void LapComplete(PlayerControls playerControlsScript)//this buggy completed a lap
 	{
-		Debug.Log("Player " + buggyScript.playerId + " completed a lap!");
-		buggyScript.checkpointsHit = null;
+		Debug.Log("Player " + playerControlsScript.playerId + " completed a lap!");
+		playerControlsScript.checkpointsHit = null;
 		
 		
 	}
 	
-	bool HitAllCheckpoints(Buggy buggyScript)//check if they hit every single checkpoint (except the finish line, they're hitting that right now)
+	bool HitAllCheckpoints(PlayerControls playerControlsScript)//check if they hit every single checkpoint (except the finish line, they're hitting that right now)
 	{
-		if(GameManager.Instance.checkpoints.Count-1 <= buggyScript.checkpointsHit.Count)//Count-1 to exclude the finish line they haven't hit until just now
+		if(GameManager.Instance.checkpoints.Count-1 <= playerControlsScript.checkpointsHit.Count)//Count-1 to exclude the finish line they haven't hit until just now
 		{
 			return true;
 		}
 		else return false;
 	}
-	bool HitMostCheckpoints(Buggy buggyScript, int leniency)//if they hit all but (leniency number) amount of checkpoints
+	bool HitMostCheckpoints(PlayerControls playerControlsScript, int leniency)//if they hit all but (leniency number) amount of checkpoints
 	{
-		if(GameManager.Instance.checkpoints.Count - (leniency+1) <= buggyScript.checkpointsHit.Count)
+		if(GameManager.Instance.checkpoints.Count - (leniency+1) <= playerControlsScript.checkpointsHit.Count)
 		{
 			return true;
 		}
@@ -75,7 +80,7 @@ public class RaceCheckpoints : MonoBehaviour
 	
     // Start is called before the first frame update
     void Start()
-    {
+	{
 	    GameManager.Instance.LoadMapCheckpoint(this.gameObject);//each checkpoint reports its existence to the game manager when they are loaded
 	    //if all maps are shown in one single scene, this will need to be changed to avoid bugs
     }

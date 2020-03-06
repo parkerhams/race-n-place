@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 57a47dc7596c15c45a5d23bbdacce2d7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - joinPanelPrefab: {fileID: 173894924255189374, guid: 1c04c779c99a9bf4fbdef65930295842,
+      type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

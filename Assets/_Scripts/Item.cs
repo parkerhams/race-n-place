@@ -5,7 +5,7 @@ using UnityEngine;
 public class Item : MonoBehaviour
 {
 
-    public int scrapCost = 1;
+	public int scrapCost = 2;
     // Start is called before the first frame update
     void Start()
     {
